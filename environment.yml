@@ -1,0 +1,16 @@
+# spm-python from conda-forge, plus pip for the three packages that
+# conda-forge does not have.
+name: spm
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13              # spm-python supports Python 3.10 to 3.13
+  - numpy=2.5.3
+  - scipy=1.18.1             # spm-python uses scipy for sparse matrices but does not list it
+  - mpython-core=25.4rc1
+  - jupyterlab=4.6.4
+  - pip
+  - pip:                     # not on conda-forge
+      - spm-python==25.1.2.post2
+      - spm-runtime-r2025b==25.1.2.post2
+      - matlab-runtime==0.0.6

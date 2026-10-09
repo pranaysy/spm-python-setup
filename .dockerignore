@@ -1,0 +1,4 @@
+# Build context for Containerfile: only these files.
+*
+!requirements.txt
+!install_runtime_products.py
