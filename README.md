@@ -369,7 +369,7 @@ This list of packages is not exhaustive and was tested on a headless Debian 13 h
 
 # Installation: Container-based
 
-The container image has spm-python, JupyterLab and the parts of the MATLAB Runtime R2025b that SPM uses, on Debian 13. These steps are for a Linux host with podman, which runs rootless by default, or with rootless Docker ([setup guide](https://docs.docker.com/engine/security/rootless/)). The image takes up 3.4 GB, and the download is about 1.4 GB. The image contains the MATLAB Runtime. If you use the image, you accept the [MATLAB Runtime licence](https://www.mathworks.com/products/compiler/matlab-runtime.html).
+The container image has spm-python, JupyterLab and the parts of the MATLAB Runtime R2025b that SPM uses, on Debian 13. These steps are for a Linux host with podman, which runs rootless by default, or with rootless Docker ([setup guide](https://docs.docker.com/engine/security/rootless/)). The image takes up 3.2 GB, and the download is about 1.2 GB. The image contains the MATLAB Runtime. If you use the image, you accept the [MATLAB Runtime licence](https://www.mathworks.com/products/compiler/matlab-runtime.html).
 
 The image is for x86-64 (`linux/amd64`) only. On ARM64 hosts, it can run only through emulation, which is not officially supported. Podman is preferable over Docker as it runs rootless out of the box, avoids a persistent privileged daemon and `--userns=keep-id` makes it convenient to map uids for writing files.
 
@@ -393,7 +393,7 @@ The image is for x86-64 (`linux/amd64`) only. On ARM64 hosts, it can run only th
    podman:
 
    ```bash
-   podman run --rm --interactive --tty --userns=keep-id \
+   podman run --rm --interactive --tty --userns=keep-id:uid=1000,gid=1000 \
        --env DISPLAY --volume /tmp/.X11-unix:/tmp/.X11-unix \
        --publish 127.0.0.1:8888:8888 \
        --volume "$PWD/notebooks":/work/notebooks \
@@ -401,7 +401,7 @@ The image is for x86-64 (`linux/amd64`) only. On ARM64 hosts, it can run only th
        ghcr.io/pranaysy/spm-python-setup jupyter lab --ip=0.0.0.0 --no-browser
    ```
 
-   With `--userns=keep-id`, the files that the container writes in `notebooks` belong to the user running the container i.e. you.
+   With `--userns=keep-id:uid=1000,gid=1000`, the files that the container writes in `notebooks` belong to the user running the container i.e. you. The option maps your user, whatever its uid, to the user `spm` (uid 1000) inside the container.
 
    Docker:
 
@@ -428,7 +428,7 @@ The image is for x86-64 (`linux/amd64`) only. On ARM64 hosts, it can run only th
    podman:
 
    ```bash
-   podman run --rm --userns=keep-id \
+   podman run --rm --userns=keep-id:uid=1000,gid=1000 \
        --volume "$PWD/notebooks":/work/notebooks \
        --workdir /work \
        ghcr.io/pranaysy/spm-python-setup python notebooks/demo.py
@@ -453,6 +453,8 @@ The image does not contain the full MATLAB Runtime (11 GB). [`install_runtime_pr
 - MATLAB Extended Runtime Addon
 - MATLAB Graphics Runtime Addon
 - Python Target Runtime Addon
+
+The build also leaves out files that the image does not use: the graphics drivers of Mesa and LLVM, because the runtime draws figures with its own software renderer. The test suites of the Python packages in the venv are also removed.
 
 ```bash
 podman build --file Containerfile --tag ghcr.io/pranaysy/spm-python-setup .

@@ -39,7 +39,7 @@ def download_installer(release, workdir):
     """Download the runtime installer zip for this release and unpack it."""
     url = guess_installer(release)  # same URL as install_matlab_runtime uses
     print("downloading", url, flush=True)
-    archive = url_download(url, str(workdir))
+    archive = url_download(url, str(workdir), verbose=False)
     installer = workdir / "installer"
     print("unpacking", archive, flush=True)
     ZipFileWithExecPerm(archive).extractall(installer)  # keeps the executable bits

@@ -19,7 +19,12 @@ LABEL org.opencontainers.image.source="https://github.com/pranaysy/spm-python-se
 ARG AGREE_TO_MATLAB_RUNTIME_LICENSE=yes
 
 # Set up system packages and environment
-RUN apt-get update \
+# Note: Matlab runtime's Chromium needs libGL and libgbm, but draws figures with
+# its own software renderer, so dpkg can omit Mesa's driver and LLVM files (~200MB)
+RUN printf 'path-exclude=/usr/lib/x86_64-linux-gnu/%s\n' \
+      'libLLVM*' 'libgallium*' 'libz3.so*' 'libGLX_mesa.so*' 'libGLX_indirect.so*' \
+      'dri/*' 'gbm/*' > /etc/dpkg/dpkg.cfg.d/no-mesa-drivers \
+ && apt-get update \
  && apt-get install -y --no-install-recommends \
       python3 python3-venv ca-certificates tini \
       libxfont2 libtirpc3t64 xkb-data x11-xkb-utils \
@@ -27,13 +32,14 @@ RUN apt-get update \
       libcups2t64 libdrm2 libfontconfig1 libfreetype6 libgbm1 \
       libgdk-pixbuf-2.0-0 libgl1 libgtk2.0-0t64 libice6 libnspr4 libnss3 \
       libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libxt6t64 libxtst6 \
- && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /var/lib/apt/lists/* /etc/dpkg/dpkg.cfg.d/no-mesa-drivers \
  && mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix # for display
 
-# spm-python and JupyterLab in  venv
+# spm-python and JupyterLab in  venv, and remove the packages' test suites
 COPY requirements.txt /tmp/requirements.txt
 RUN python3 -m venv /opt/spm-venv \
  && /opt/spm-venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt \
+ && find /opt/spm-venv -type d -name tests -prune -exec rm -rf {} + \
  && rm /tmp/requirements.txt
 
 # Set env variables for MATLAB Runtime

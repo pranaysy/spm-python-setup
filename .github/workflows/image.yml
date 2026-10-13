@@ -57,9 +57,11 @@ jobs:
           context: .
           file: Containerfile
           platforms: linux/amd64
-          push: true
+          # zstd layers instead of gzip, 20% less to download
+          outputs: type=image,push=true,oci-mediatypes=true,compression=zstd,compression-level=19,force-compression=true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
 
       - uses: actions/attest-build-provenance@v4
         with:
